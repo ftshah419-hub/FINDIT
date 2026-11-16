@@ -26,7 +26,7 @@ export const protect = async (req, res, next) => {
           email: demoEmail,
           password: 'Password123!',
           phone: '+1 (555) 234-5678',
-          role: 'USER',
+          role: 'ADMIN',
           profileImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
           isEmailVerified: true,
           isActive: true,
@@ -37,8 +37,10 @@ export const protect = async (req, res, next) => {
     }
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'findit_jwt_secret_token_secure_key_2026');
-      const user = await User.findById(decoded.id).select('-password');
+      const secret = process.env.JWT_SECRET || process.env.JWT_ACCESS_SECRET || 'findit_jwt_secret_token_secure_key_2026';
+      const decoded = jwt.verify(token, secret);
+      const userId = decoded.id || decoded.userId;
+      const user = await User.findById(userId).select('-password');
 
       if (!user) {
         return res.status(401).json({
@@ -70,15 +72,23 @@ export const protect = async (req, res, next) => {
   }
 };
 
+export const authenticate = protect;
+
 export const authorize = (...roles) => {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
-        message: 'You do not have permission to perform this action.',
+        message: `Access denied. Role '${req.user?.role}' is not authorized to access this resource.`,
         errorCode: 'FORBIDDEN',
       });
     }
     next();
   };
+};
+
+export default {
+  protect,
+  authenticate,
+  authorize,
 };

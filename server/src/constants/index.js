@@ -22,6 +22,27 @@ export const CLAIM_STATUS = {
   WITHDRAWN: 'WITHDRAWN',
 };
 
+export const AI_MATCH_STATUS = {
+  PENDING: 'PENDING',
+  REVIEWED: 'REVIEWED',
+  DISMISSED: 'DISMISSED',
+  CONFIRMED: 'CONFIRMED',
+};
+
+export const REPORT_STATUS = {
+  PENDING: 'PENDING',
+  REVIEWED: 'REVIEWED',
+  DISMISSED: 'DISMISSED',
+  RESOLVED: 'RESOLVED',
+};
+
+export const CAMPUS_DEPOTS = [
+  { id: 'central-library', name: 'Central Library (Main Vault)', capacity: '38%' },
+  { id: 'tech-center', name: 'Science & Tech Center Desk', capacity: '26%' },
+  { id: 'athletics-complex', name: 'Athletics & Recreation Hub', capacity: '21%' },
+  { id: 'student-union', name: 'Student Union Welcome Center', capacity: '15%' },
+];
+
 export const NOTIFICATION_TYPES = {
   REPORT_SUBMITTED: 'REPORT_SUBMITTED',
   REPORT_APPROVED: 'REPORT_APPROVED',
@@ -55,3 +76,16 @@ export const CAMPUS_ZONES = [
   'North Transit Hub',
   'Administration Building',
 ];
+
+export default {
+  ROLES,
+  ITEM_TYPES,
+  ITEM_STATUS,
+  CLAIM_STATUS,
+  AI_MATCH_STATUS,
+  REPORT_STATUS,
+  CAMPUS_DEPOTS,
+  NOTIFICATION_TYPES,
+  DEFAULT_CATEGORIES,
+  CAMPUS_ZONES,
+};

@@ -23,13 +23,23 @@ import { ItemDetailPage } from './features/user/pages/ItemDetailPage';
 import { NotificationsPage } from './features/user/pages/NotificationsPage';
 import { ProfilePage } from './features/user/pages/ProfilePage';
 
-// Admin Pages
-import { AdminDashboardPage } from './features/admin/pages/AdminDashboardPage.jsx';
+// Admin Module Layout & Pages
+import AdminLayout from './layouts/AdminLayout';
+import AdminOverview from './features/admin/pages/AdminOverview';
+import UserManagement from './features/admin/pages/UserManagement';
+import LostReportManagement from './features/admin/pages/LostReportManagement';
+import FoundReportManagement from './features/admin/pages/FoundReportManagement';
+import ClaimVerification from './features/admin/pages/ClaimVerification';
+import AIMatchingManagement from './features/admin/pages/AIMatchingManagement';
+import AnalyticsAndLogs from './features/admin/pages/AnalyticsAndLogs';
+import CategoryManagement from './features/admin/pages/CategoryManagement';
+import ComplaintManagement from './features/admin/pages/ComplaintManagement';
+import SystemSettingsPage from './features/admin/pages/SystemSettingsPage';
+import AdminLoginPage from './features/admin/pages/LoginPage';
 
 // Route Guards & Context
 import { AdminRoute } from './routes/AdminRoute.jsx';
 import { PublicOnlyRoute } from './routes/PublicOnlyRoute.jsx';
-import { useAuth } from './context/AuthContext.jsx';
 import { pageVariants } from './utils/animations.js';
 
 // Animated Route Page Wrapper
@@ -46,13 +56,12 @@ const PageTransition = ({ children }) => (
 );
 
 export function App() {
-  const { isAuthenticated, user } = useAuth();
   const location = useLocation();
 
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        {/* Public Authentication Pages with Smooth Page Transitions */}
+        {/* Public Authentication Pages with Smooth Transitions */}
         <Route
           path="/login"
           element={
@@ -114,17 +123,29 @@ export function App() {
           }
         />
 
-        {/* Admin Dashboard */}
+        {/* Dedicated Admin Direct Login */}
+        <Route path="/admin/login" element={<AdminLoginPage />} />
+
+        {/* Admin Module Protected Routes */}
         <Route
           path="/admin"
           element={
             <AdminRoute>
-              <PageTransition>
-                <AdminDashboardPage />
-              </PageTransition>
+              <AdminLayout />
             </AdminRoute>
           }
-        />
+        >
+          <Route index element={<AdminOverview />} />
+          <Route path="users" element={<UserManagement />} />
+          <Route path="lost-reports" element={<LostReportManagement />} />
+          <Route path="found-reports" element={<FoundReportManagement />} />
+          <Route path="claims" element={<ClaimVerification />} />
+          <Route path="ai-matching" element={<AIMatchingManagement />} />
+          <Route path="analytics" element={<AnalyticsAndLogs />} />
+          <Route path="categories" element={<CategoryManagement />} />
+          <Route path="complaints" element={<ComplaintManagement />} />
+          <Route path="settings" element={<SystemSettingsPage />} />
+        </Route>
 
         {/* User Platform Layout & Routes */}
         <Route path="/" element={<UserLayout />}>
