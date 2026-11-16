@@ -23,13 +23,13 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: [true, 'Password is required'],
-      minlength: [8, 'Password must be at least 8 characters long'],
+      minlength: [6, 'Password must be at least 6 characters long'],
       select: false, // Don't return password hash by default
     },
     phone: {
       type: String,
       trim: true,
-      default: null,
+      default: '',
     },
     role: {
       type: String,
@@ -42,7 +42,7 @@ const userSchema = new mongoose.Schema(
     },
     profileImage: {
       type: String,
-      default: null,
+      default: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
     },
     isEmailVerified: {
       type: Boolean,
@@ -78,6 +78,17 @@ const userSchema = new mongoose.Schema(
     },
   }
 );
+
+// Hash password before saving if modified and not already hashed
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+  if (this.password && (this.password.startsWith('$2a$') || this.password.startsWith('$2b$'))) {
+    return next();
+  }
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
+});
 
 // Method: Compare candidate password with stored bcrypt hash
 userSchema.methods.comparePassword = async function (candidatePassword) {

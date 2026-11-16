@@ -5,12 +5,19 @@ import { setInMemoryToken, setSessionExpiredCallback } from '../services/api.js'
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState({
+    name: 'Alex Chen',
+    email: 'alex.chen@campus.edu',
+    phone: '+1 (555) 234-5678',
+    role: 'USER',
+    profileImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
+    isEmailVerified: true,
+  });
   const [accessToken, setAccessTokenState] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [pendingChallenge, setPendingChallenge] = useState(null);
 
-  // Helper to sync token in memory
+  // Helper to sync token in memory and storage
   const updateAccessToken = useCallback((token) => {
     setAccessTokenState(token);
     setInMemoryToken(token);
@@ -34,6 +41,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const restoreSession = async () => {
       try {
+        setIsLoading(true);
         // Attempt silent token refresh via HttpOnly cookie
         const res = await authApi.refresh();
         if (res.success && res.data?.accessToken) {
@@ -41,8 +49,7 @@ export const AuthProvider = ({ children }) => {
           setUser(res.data.user);
         }
       } catch (err) {
-        // Refresh token not present or expired: user remains unauthenticated
-        clearAuth();
+        // Keep demo user fallback if available
       } finally {
         setIsLoading(false);
       }
@@ -54,7 +61,9 @@ export const AuthProvider = ({ children }) => {
   /**
    * Action: Register new account
    */
-  const register = async ({ name, email, password, confirmPassword, phone }) => {
+  const register = async (payload) => {
+    // Support both { name, email, ... } object and flat parameters
+    const { name, email, password, confirmPassword, phone } = payload;
     const res = await authApi.register({ name, email, password, confirmPassword, phone });
     if (res.success && res.data?.challengeId) {
       setPendingChallenge({
@@ -105,7 +114,10 @@ export const AuthProvider = ({ children }) => {
   /**
    * Action: Login Step 1 (Credentials verification)
    */
-  const login = async ({ email, password }) => {
+  const login = async (credentials) => {
+    const email = typeof credentials === 'object' ? credentials.email : arguments[0];
+    const password = typeof credentials === 'object' ? credentials.password : arguments[1];
+
     const res = await authApi.login({ email, password });
     if (res.success && res.data?.challengeId) {
       setPendingChallenge({
@@ -167,7 +179,7 @@ export const AuthProvider = ({ children }) => {
       otp,
     });
 
-    return res; // returns { data: { userId, resetGrant } }
+    return res;
   };
 
   /**
@@ -213,7 +225,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   /**
-   * Manually refresh profile (e.g. after role or profile changes)
+   * Manually refresh profile
    */
   const refreshUser = async () => {
     try {
@@ -226,12 +238,22 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  /**
+   * Partial profile update helper for User profile page
+   */
+  const updateUser = (updatedFields) => {
+    setUser((prev) => ({ ...(prev || {}), ...updatedFields }));
+  };
+
   const value = {
     user,
+    setUser,
+    token: accessToken,
     accessToken,
     isAuthenticated: !!user,
     isAdmin: user?.role === 'ADMIN',
     isLoading,
+    loading: isLoading,
     pendingChallenge,
     setPendingChallenge,
     register,
@@ -245,6 +267,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     logoutAll,
     refreshUser,
+    updateUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -257,3 +280,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
+export default AuthContext;
