@@ -1,28 +1,30 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
-import { ROLES } from '../constants/index.js';
+import { ROLES, ALL_ROLES } from '../constants/roles.js';
 
 const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, 'Please provide your name'],
+      required: [true, 'Full name is required'],
       trim: true,
+      minlength: [2, 'Name must be at least 2 characters long'],
       maxlength: [100, 'Name cannot exceed 100 characters'],
     },
     email: {
       type: String,
-      required: [true, 'Please provide your email'],
+      required: [true, 'Email address is required'],
       unique: true,
       lowercase: true,
       trim: true,
-      match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email'],
+      match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email address'],
+      index: true,
     },
     password: {
       type: String,
-      required: [true, 'Please provide a password'],
-      minlength: [6, 'Password must be at least 6 characters'],
-      select: false,
+      required: [true, 'Password is required'],
+      minlength: [6, 'Password must be at least 6 characters long'],
+      select: false, // Don't return password hash by default
     },
     phone: {
       type: String,
@@ -31,8 +33,12 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: Object.values(ROLES),
+      enum: {
+        values: ALL_ROLES,
+        message: '{VALUE} is not a valid role',
+      },
       default: ROLES.USER,
+      index: true,
     },
     profileImage: {
       type: String,
@@ -40,11 +46,13 @@ const userSchema = new mongoose.Schema(
     },
     isEmailVerified: {
       type: Boolean,
-      default: true,
+      default: false,
+      index: true,
     },
     isActive: {
       type: Boolean,
       default: true,
+      index: true,
     },
     failedLoginAttempts: {
       type: Number,
@@ -52,25 +60,63 @@ const userSchema = new mongoose.Schema(
     },
     lockUntil: {
       type: Date,
+      default: null,
     },
     passwordChangedAt: {
       type: Date,
+      default: null,
     },
   },
   {
     timestamps: true,
+    toJSON: {
+      transform: function (doc, ret) {
+        delete ret.password;
+        delete ret.__v;
+        return ret;
+      },
+    },
   }
 );
 
+// Hash password before saving if modified and not already hashed
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
+  if (this.password && (this.password.startsWith('$2a$') || this.password.startsWith('$2b$'))) {
+    return next();
+  }
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
   next();
 });
 
+// Method: Compare candidate password with stored bcrypt hash
 userSchema.methods.comparePassword = async function (candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
+  return bcrypt.compare(candidatePassword, this.password);
+};
+
+// Method: Check if account is temporarily locked
+userSchema.methods.isLocked = function () {
+  return !!(this.lockUntil && this.lockUntil > new Date());
+};
+
+// Method: Record failed login attempt and apply lock if threshold exceeded
+userSchema.methods.recordFailedAttempt = async function () {
+  this.failedLoginAttempts = (this.failedLoginAttempts || 0) + 1;
+  // If 5 or more failed attempts, lock account for 15 minutes
+  if (this.failedLoginAttempts >= 5) {
+    this.lockUntil = new Date(Date.now() + 15 * 60 * 1000);
+  }
+  return this.save({ validateBeforeSave: false });
+};
+
+// Method: Reset failed attempts on successful password verification
+userSchema.methods.resetFailedAttempts = async function () {
+  if (this.failedLoginAttempts > 0 || this.lockUntil) {
+    this.failedLoginAttempts = 0;
+    this.lockUntil = null;
+    return this.save({ validateBeforeSave: false });
+  }
 };
 
 export const User = mongoose.model('User', userSchema);

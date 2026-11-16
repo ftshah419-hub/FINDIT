@@ -3,15 +3,29 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --brand-navy: #101C36;
+    --brand-primary: #2457E8;
+    --brand-accent: #4D8DFF;
+    --brand-bg: #F4F7FC;
+    --brand-surface: #FFFFFF;
+    --brand-border: #DCE4F0;
+    --brand-secondary: #64748B;
+  }
+
   html, body {
     margin: 0;
     padding: 0;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   }
 
   /* Dark mode overrides for default page elements */
   .dark {
     color-scheme: dark;
+    --brand-bg: #0B1220;
+    --brand-surface: #151F30;
+    --brand-border: #29364A;
+    --brand-secondary: #A8B5CA;
   }
 
   .dark body {

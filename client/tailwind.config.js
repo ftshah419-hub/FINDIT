@@ -5,6 +5,23 @@ export default {
   theme: {
     extend: {
       colors: {
+        brand: {
+          navy: '#101C36',
+          primary: '#2457E8',
+          accent: '#4D8DFF',
+          bg: '#F4F7FC',
+          surface: '#FFFFFF',
+          border: '#DCE4F0',
+          secondary: '#64748B',
+          'dark-bg': '#0B1220',
+          'dark-surface': '#151F30',
+          'dark-surface-2': '#1D2A40',
+          'dark-text': '#F8FAFC',
+          'dark-secondary': '#A8B5CA',
+          'dark-border': '#29364A',
+          'dark-primary': '#4D8DFF',
+          'dark-accent': '#79A9FF',
+        },
         primary: {
           DEFAULT: '#003ec3',
           container: '#2457e8',
@@ -98,7 +115,7 @@ export default {
         'gutter-mobile': '1rem',
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
         display: ['Inter', 'sans-serif'],
         'headline-lg': ['Inter', 'sans-serif'],
         'headline-md': ['Inter', 'sans-serif'],
